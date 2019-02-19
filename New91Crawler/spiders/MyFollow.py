@@ -27,7 +27,19 @@ class MyFollowSpider(scrapy.Spider):
         # 兼容 cookie 失效的情况
         if 'login.php' in response.url:
             raise ValueError('cookie 未设置或失效')
-        elif 1 <= current_page_num <= 20:
+        elif current_page_num < 21:
+            self.logger.warn('不到开始分析的页面，找下一页')
+            next_page_tag = response.css('a[href*="?&page="]')
+            for i in next_page_tag:
+                if '»' == i.css('a::text').extract_first():
+                    ori_link = i.css('a::attr(href)').extract_first()
+                    next_link = response.urljoin(ori_link)
+                    next_headers = {
+                        'Cookie': self.cookie,
+                        'Referer': response.url
+                    }
+                    yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers)
+        elif 21 <= current_page_num <= 40:
             myvideo_list = response.css('div.maindescwithoutborder')
             video_info_list = myvideo_list.css('a')
             self.logger.warn('解析{0}成功，存在{1}个视频'.format(response.url, len(video_info_list)))
