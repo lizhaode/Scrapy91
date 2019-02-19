@@ -18,10 +18,16 @@ class MyFollowSpider(scrapy.Spider):
         yield scrapy.Request(url=me_main_url, callback=self.parse_me, headers=login_headers)
 
     def parse_me(self, response: HtmlResponse):
-        # 兼容 cookie 失效只想下载 json 文件内容的情况
+        # 获取当前页面页数
+        url_list = response.url.split('page=')
+        if len(url_list) == 1:
+            current_page_num = 1
+        else:
+            current_page_num = int(url_list[1])
+        # 兼容 cookie 失效的情况
         if 'login.php' in response.url:
             raise ValueError('cookie 未设置或失效')
-        else:
+        elif 1 <= current_page_num <= 20:
             myvideo_list = response.css('div.maindescwithoutborder')
             video_info_list = myvideo_list.css('a')
             self.logger.warn('解析{0}成功，存在{1}个视频'.format(response.url, len(video_info_list)))
@@ -39,26 +45,20 @@ class MyFollowSpider(scrapy.Spider):
             self.logger.warn('最终解析{0}个视频'.format(len(link_and_title_dict)))
 
             # 记录下来当前页面的内容
-            url_list = response.url.split('page=')
-            if len(url_list) == 1:
-                current_page_num = 1
-            else:
-                current_page_num = int(url_list[1])
             yield SaveMovieInfoItem(page_number=current_page_num, movie_link_and_name=link_and_title_dict)
 
-            if current_page_num <= 20:
-                self.logger.warn('解析完毕，检查是否存在下一页'.format(response.url))
-                next_page_tag = response.css('a[href*="?&page="]')
-                for i in next_page_tag:
-                    if '»' == i.css('a::text').extract_first():
-                        ori_link = i.css('a::attr(href)').extract_first()
-                        next_link = response.urljoin(ori_link)
-                        self.logger.warn('存在下一页')
-                        next_headers = {
-                            'Cookie': self.cookie,
-                            'Referer': response.url
-                        }
-                        yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers)
+            self.logger.warn('解析完毕，检查是否存在下一页'.format(response.url))
+            next_page_tag = response.css('a[href*="?&page="]')
+            for i in next_page_tag:
+                if '»' == i.css('a::text').extract_first():
+                    ori_link = i.css('a::attr(href)').extract_first()
+                    next_link = response.urljoin(ori_link)
+                    self.logger.warn('存在下一页')
+                    next_headers = {
+                        'Cookie': self.cookie,
+                        'Referer': response.url
+                    }
+                    yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers)
 
     def parse_my_follow_real_link(self, response: HtmlResponse):
         self.logger.warn('开始解析{0}真实视频'.format(response.url))

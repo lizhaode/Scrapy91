@@ -22,7 +22,6 @@ class CustomerUserAgentMiddleware(UserAgentMiddleware):
             request.headers.setdefault(b'User-Agent', random.choice(self.user_agent))
             request.headers.setdefault(b'X-Forwarded-For', x_forwarded_for())
             if 'view_video.php' in request.url and 'Referer' in request.headers:
-                spider.logger.warn('为了匿名分析{0}，Referer去掉'.format(request.url))
                 request.headers.pop('Referer')
 
 
