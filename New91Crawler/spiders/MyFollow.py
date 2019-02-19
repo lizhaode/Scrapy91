@@ -6,7 +6,7 @@ from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem
 
 class MyFollowSpider(scrapy.Spider):
     name = 'MyFollow'
-    cookie = '__cfduid=d63e81e1955407b501c5042111fd962671548926438; __utmz=50351329.1548926440.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __dtsu=D9E9B66BE8BD525C1373DB3602A5D655; 91username=082aVgUwRYBsuTTSsGncSC7V5KB0R%2FOqkMx%2BS1Ce%2FXbWZkMfzJQzruw; __utma=50351329.666365717.1548926440.1550404739.1550535152.33; __utmb=50351329.0.10.1550535152; __utmc=50351329; CLIPSHARE=n7k00qlco3g05bk52f9u5h0k37; __51cke__=; DUID=6a6duFUD5MUSpDSjT%2FDbvpzw8G3iL%2FYU%2BkrWuD7cIB6ykaHM; USERNAME=b9c06G3Vr%2B3%2FnegqL0uoaY9EqCqP%2FO5891Jo9i6MCyygp4f58PodIlY; user_level=1; EMAILVERIFIED=yes; level=1; __tins__3878067=%7B%22sid%22%3A%201550535153533%2C%20%22vd%22%3A%205%2C%20%22expires%22%3A%201550536979045%7D; __51laig__=5'
+    cookie = ''
 
     def start_requests(self):
         me_main_url = 'http://91porn.com/my_subs.php'
