@@ -18,7 +18,7 @@ class Entrance(scrapy.Spider):
         list_channel_list = response.css('div.listchannel')
         self.logger.warn('解析到{0}个视频页面，开始获取其链接'.format(len(list_channel_list)))
         video_page_num = 1
-        title_and_link = {}
+        link_and_title = {}
         for item in list_channel_list:
             self.logger.warn('开始解析第{0}个视频页面'.format(video_page_num))
             a_tag = item.css('a')
@@ -27,7 +27,7 @@ class Entrance(scrapy.Spider):
 
             # 将获取到的视频页面交给另一个 parse 去分析
             self.logger.warn('解析完毕，链接:{0}<===>标题:{1}'.format(link, str(title)))
-            title_and_link[title] = link
+            link_and_title[link] = title
             yield scrapy.Request(url=link, callback=self.parse_video_page)
             video_page_num += 1
 
@@ -37,7 +37,7 @@ class Entrance(scrapy.Spider):
             current_page_num = 1
         else:
             current_page_num = url_list[1]
-        yield SaveMovieInfoItem(page_number=current_page_num, movie_name_and_link=title_and_link)
+        yield SaveMovieInfoItem(page_number=current_page_num, movie_link_and_name=link_and_title)
 
         # 判断是否存在下一页的标志
         next_page_tag = response.css('a[href*="?category=long&viewtype=basic"]')

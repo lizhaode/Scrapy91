@@ -1,15 +1,12 @@
-import json
-import time
-
 import scrapy
 from scrapy.http import HtmlResponse
 
-from New91Crawler.items import MyFollowMovieInfoItem, DownloadVideoItem
+from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem
 
 
 class MyFollowSpider(scrapy.Spider):
     name = 'MyFollow'
-    cookie = ''
+    cookie = '__cfduid=d63e81e1955407b501c5042111fd962671548926438; __utmz=50351329.1548926440.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __dtsu=D9E9B66BE8BD525C1373DB3602A5D655; 91username=082aVgUwRYBsuTTSsGncSC7V5KB0R%2FOqkMx%2BS1Ce%2FXbWZkMfzJQzruw; __utma=50351329.666365717.1548926440.1550404739.1550535152.33; __utmb=50351329.0.10.1550535152; __utmc=50351329; CLIPSHARE=n7k00qlco3g05bk52f9u5h0k37; __51cke__=; DUID=6a6duFUD5MUSpDSjT%2FDbvpzw8G3iL%2FYU%2BkrWuD7cIB6ykaHM; USERNAME=b9c06G3Vr%2B3%2FnegqL0uoaY9EqCqP%2FO5891Jo9i6MCyygp4f58PodIlY; user_level=1; EMAILVERIFIED=yes; level=1; __tins__3878067=%7B%22sid%22%3A%201550535153533%2C%20%22vd%22%3A%205%2C%20%22expires%22%3A%201550536979045%7D; __51laig__=5'
 
     def start_requests(self):
         me_main_url = 'http://91porn.com/my_subs.php'
@@ -23,60 +20,45 @@ class MyFollowSpider(scrapy.Spider):
     def parse_me(self, response: HtmlResponse):
         # 兼容 cookie 失效只想下载 json 文件内容的情况
         if 'login.php' in response.url:
-            self.logger.warn('cookie失效，直接用follow.json下载')
-            with open('myfollowinfo/follow.json') as f:
-                movie_info = json.loads(f.read())
-            self.logger.warn('文件中保存了{0}个视频'.format(len(movie_info)))
-            for link, title in movie_info.items():
-                yield scrapy.Request(url=link, callback=self.parse_my_follow_real_link)
+            raise ValueError('cookie 未设置或失效')
         else:
             myvideo_list = response.css('div.maindescwithoutborder')
             video_info_list = myvideo_list.css('a')
             self.logger.warn('解析{0}成功，存在{1}个视频'.format(response.url, len(video_info_list)))
-            # 将解析到的视频放到内存中，减少硬盘读写
-            title_and_link_dict = {}
+
+            link_and_title_dict = {}
             for item in video_info_list:
                 title = item.css('::text').extract_first()
                 link = item.css('a::attr(href)').extract_first()
                 # 不知道为啥有时候会出现 email protected
                 if 'email protected' in title:
                     continue
-                title_and_link_dict[link] = title
-            self.logger.warn('最终解析{0}个视频'.format(len(title_and_link_dict)))
+                link_and_title_dict[link] = title
+                # 丢给另一个去解析真实的视频地址
+                yield scrapy.Request(url=link, callback=self.parse_my_follow_real_link)
+            self.logger.warn('最终解析{0}个视频'.format(len(link_and_title_dict)))
 
-            # 拼装 meta 内容
-            meta_info = {}
-            movie_info = response.meta.get('movie_info')
-            if movie_info is not None:
-                movie_info.update(title_and_link_dict)
-                meta_info['movie_info'] = movie_info.copy()
+            # 记录下来当前页面的内容
+            url_list = response.url.split('page=')
+            if len(url_list) == 1:
+                current_page_num = 1
             else:
-                meta_info['movie_info'] = title_and_link_dict
+                current_page_num = int(url_list[1])
+            yield SaveMovieInfoItem(page_number=current_page_num, movie_link_and_name=link_and_title_dict)
 
-            self.logger.warn('解析完毕，检查是否存在下一页'.format(response.url))
-            next_page_tag = response.css('a[href*="?&page="]')
-            next_link = ''
-            for i in next_page_tag:
-                if '»' == i.css('a::text').extract_first():
-                    ori_link = i.css('a::attr(href)').extract_first()
-                    next_link = response.urljoin(ori_link)
-                    self.logger.warn('存在下一页')
-                    next_headers = {
-                        'Cookie': self.cookie,
-                        'Referer': response.url
-                    }
-                    yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers, meta=meta_info)
-
-            if not next_link:
-                self.logger.warn('所有页面视频解析完毕，开始保存文件')
-                yield MyFollowMovieInfoItem(movie_name_and_page=meta_info['movie_info'])
-                # 确保文件保存完毕
-                time.sleep(30)
-                with open('myfollowinfo/follow.json') as f:
-                    movie_info = json.loads(f.read())
-                self.logger.warn('文件中保存了{0}个视频'.format(len(movie_info)))
-                for link, title in movie_info.items():
-                    yield scrapy.Request(url=link, callback=self.parse_my_follow_real_link)
+            if current_page_num <= 20:
+                self.logger.warn('解析完毕，检查是否存在下一页'.format(response.url))
+                next_page_tag = response.css('a[href*="?&page="]')
+                for i in next_page_tag:
+                    if '»' == i.css('a::text').extract_first():
+                        ori_link = i.css('a::attr(href)').extract_first()
+                        next_link = response.urljoin(ori_link)
+                        self.logger.warn('存在下一页')
+                        next_headers = {
+                            'Cookie': self.cookie,
+                            'Referer': response.url
+                        }
+                        yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers)
 
     def parse_my_follow_real_link(self, response: HtmlResponse):
         self.logger.warn('开始解析{0}真实视频'.format(response.url))
@@ -92,6 +74,6 @@ class MyFollowSpider(scrapy.Spider):
             video_link_list = video_link.split('//')
             real_video_link = video_link_list[0] + '//' + video_link_list[1] + '/' + video_link_list[2]
             self.logger.warn('视频:{0} 分析完毕,丢入下载 pipelines'.format(title))
-            yield DownloadVideoItem(file_urls=real_video_link, file_name=title+'-'+author)
+            yield DownloadVideoItem(file_urls=real_video_link, file_name=title + '-' + author)
         else:
             self.logger.warn('获取视频下载地址失败，地址：{0}'.format(response.url))

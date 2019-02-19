@@ -23,7 +23,7 @@ class DownloadVideoPipeline(FilesPipeline):
                 'User-Agent': random.choice(info.spider.settings.get('USER_AGENT')),
                 'X-Forwarded-For': x_forwarded_for()
             }
-            return scrapy.Request(url=item['file_urls'], meta=item,headers=customer_headers)
+            return scrapy.Request(url=item['file_urls'], meta=item, headers=customer_headers)
 
     def file_path(self, request, response=None, info=None):
         down_name = request.meta['file_name'] + '.mp4'
@@ -34,11 +34,11 @@ class SaveMoviePipeline:
     def process_item(self, item, spider):
         if isinstance(item, SaveMovieInfoItem):
             file_name = '第{0}页.json'.format(item['page_number'])
-            name_and_link = json.dumps(item['movie_name_and_link'], ensure_ascii=False)
+            link_and_name = json.dumps(item['movie_link_and_name'], ensure_ascii=False)
             if os.path.exists('info') is False:
                 os.mkdir('info')
             with open('info/{0}'.format(file_name), 'w') as f:
-                f.write(name_and_link)
+                f.write(link_and_name)
             spider.logger.warn('保存{0}完毕'.format(file_name))
             return item
         else:
