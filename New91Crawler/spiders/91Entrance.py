@@ -57,7 +57,7 @@ class Entrance(scrapy.Spider):
         title = response.css('#viewvideo-title::text').extract_first().strip()
         author = response.css('a[href*="uprofile.php"]').css('span::text').extract_first().strip()
         # 发现有的视频，名字相同，作者相同，只有Url中的viewkey不同
-        view_key = response.url.split('viewkey=')[1]
+        view_key = response.url.split('viewkey=')[1].split('&')[0]
         # 由于有的视频名字中带 / 会导致创建成文件夹，所以需要处理一下
         if '/' in title:
             title = title.replace('/', '')
