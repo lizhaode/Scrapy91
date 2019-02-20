@@ -56,6 +56,8 @@ class Entrance(scrapy.Spider):
         self.logger.warn('开始分析视频真实地址')
         title = response.css('#viewvideo-title::text').extract_first().strip()
         author = response.css('a[href*="uprofile.php"]').css('span::text').extract_first().strip()
+        # 发现有的视频，名字相同，作者相同，只有Url中的viewkey不同
+        view_key = response.url.split('viewkey=')[1]
         # 由于有的视频名字中带 / 会导致创建成文件夹，所以需要处理一下
         if '/' in title:
             title = title.replace('/', '')
@@ -67,6 +69,7 @@ class Entrance(scrapy.Spider):
             real_video_link = video_link_list[0] + '//' + video_link_list[1] + '/' + video_link_list[2]
             self.logger.warn('视频:{0} 分析完毕'.format(title))
             self.logger.warn('获取到下载链接，丢入下载 pipelines')
-            yield DownloadVideoItem(file_urls=real_video_link, file_name=title+'-'+author)
+            down_file_name = title + '-' + author + '-' + view_key
+            yield DownloadVideoItem(file_urls=real_video_link, file_name=down_file_name)
         else:
             self.logger.warn('获取视频下载地址失败，地址：{0}'.format(response.url))

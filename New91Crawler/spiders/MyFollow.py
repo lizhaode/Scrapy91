@@ -27,19 +27,7 @@ class MyFollowSpider(scrapy.Spider):
         # 兼容 cookie 失效的情况
         if 'login.php' in response.url:
             raise ValueError('cookie 未设置或失效')
-        elif current_page_num < 21:
-            self.logger.warn('不到开始分析的页面，找下一页')
-            next_page_tag = response.css('a[href*="?&page="]')
-            for i in next_page_tag:
-                if '»' == i.css('a::text').extract_first():
-                    ori_link = i.css('a::attr(href)').extract_first()
-                    next_link = response.urljoin(ori_link)
-                    next_headers = {
-                        'Cookie': self.cookie,
-                        'Referer': response.url
-                    }
-                    yield scrapy.Request(url=next_link, callback=self.parse_me, headers=next_headers)
-        elif 21 <= current_page_num <= 40:
+        else:
             myvideo_list = response.css('div.maindescwithoutborder')
             video_info_list = myvideo_list.css('a')
             self.logger.warn('解析{0}成功，存在{1}个视频'.format(response.url, len(video_info_list)))
@@ -76,6 +64,8 @@ class MyFollowSpider(scrapy.Spider):
         self.logger.warn('开始解析{0}真实视频'.format(response.url))
         title = response.css('#viewvideo-title::text').extract_first().strip()
         author = response.css('a[href*="uprofile.php"]').css('span::text').extract_first().strip()
+        # 发现有的视频，名字相同，作者相同，只有Url中的viewkey不同
+        view_key = response.url.split('viewkey=')[1]
         # 由于有的视频名字中带 / 会导致创建成文件夹，所以需要处理一下
         if '/' in title:
             title = title.replace('/', '')
@@ -86,6 +76,7 @@ class MyFollowSpider(scrapy.Spider):
             video_link_list = video_link.split('//')
             real_video_link = video_link_list[0] + '//' + video_link_list[1] + '/' + video_link_list[2]
             self.logger.warn('视频:{0} 分析完毕,丢入下载 pipelines'.format(title))
-            yield DownloadVideoItem(file_urls=real_video_link, file_name=title + '-' + author)
+            down_file_name = title + '-' + author + '-' + view_key
+            yield DownloadVideoItem(file_urls=real_video_link, file_name=down_file_name)
         else:
             self.logger.warn('获取视频下载地址失败，地址：{0}'.format(response.url))
