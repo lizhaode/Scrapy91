@@ -19,7 +19,3 @@ class DownloadVideoItem(scrapy.Item):
 class SaveMovieInfoItem(scrapy.Item):
     page_number = scrapy.Field()
     movie_link_and_name = scrapy.Field()
-
-
-class MyFollowMovieInfoItem(scrapy.Item):
-    movie_name_and_page = scrapy.Field()

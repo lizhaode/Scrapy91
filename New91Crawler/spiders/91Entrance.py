@@ -19,6 +19,7 @@ class Entrance(scrapy.Spider):
             current_page_num = int(url_list[1])
 
         next_page_link = self.parse_next_link(response)
+        filter_keywords = self.crawler.settings.getlist('FILTER_KEYWORDS')
 
         # 由于91视频页面太多，控制一下每次爬取的数量
         if current_page_num < 1 and next_page_link is not None:
@@ -34,9 +35,15 @@ class Entrance(scrapy.Spider):
                 a_tag = item.css('a')
                 link = a_tag.css('a::attr(href)').extract_first()
                 title = a_tag.css('a::attr(title)').extract_first()
-                # 将获取到的视频页面交给另一个 parse 去分析
-                link_and_title[link] = title
-                yield scrapy.Request(url=link, callback=self.parse_video_page)
+                # 根据过滤关键字选择是否需要分析并下载
+                if filter_keywords:
+                    for filter_keyword in filter_keywords:
+                        if filter_keyword in title:
+                            link_and_title[link] = title
+                            yield scrapy.Request(url=link, callback=self.parse_video_page)
+                else:
+                    link_and_title[link] = title
+                    yield scrapy.Request(url=link, callback=self.parse_video_page)
             self.logger.warn('最终解析{0}个视频'.format(len(link_and_title)))
             yield SaveMovieInfoItem(page_number=current_page_num, movie_link_and_name=link_and_title)
             yield scrapy.Request(url=next_page_link, callback=self.parse)
