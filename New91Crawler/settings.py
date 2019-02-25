@@ -16,7 +16,7 @@ RETRY_TIMES = 10
 RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
 DOWNLOAD_TIMEOUT = 3600
 
-FILTER_KEYWORDS = ['丝', '制服', 'D', '巨乳', '白富美', '颜值']
+FILTER_KEYWORDS = ['丝', '制服', '杯', '巨乳', '白富美', '颜值', '清纯']
 
 DOWNLOAD_MAXSIZE = 0
 DOWNLOAD_WARNSIZE = 0
