@@ -1,7 +1,7 @@
 import scrapy
 from scrapy.http.response.html import HtmlResponse
 
-from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem
+from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem, UpdateMovieLinkItem
 
 
 class Entrance(scrapy.Spider):
@@ -63,9 +63,11 @@ class Entrance(scrapy.Spider):
             # 处理一下链接中 http://185.38.13.130//mp43/2998... 这种的 url
             video_link_list = video_link.split('//')
             real_video_link = video_link_list[0] + '//' + video_link_list[1] + '/' + video_link_list[2]
-            self.logger.warn('获取到下载链接，丢入下载 pipelines')
+            self.logger.warn('获取到下载链接，丢入下载队列')
             down_file_name = title + '-' + author + '-' + view_key
             yield DownloadVideoItem(file_urls=real_video_link, file_name=down_file_name)
+            self.logger.warn('丢入下载后，更新数据库')
+            yield UpdateMovieLinkItem(movie_page_url=response.url, movie_real_url=real_video_link)
         else:
             self.logger.warn('获取视频下载地址失败，地址：{0}'.format(response.url))
 

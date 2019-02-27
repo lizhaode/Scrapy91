@@ -17,6 +17,12 @@ RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
 DOWNLOAD_TIMEOUT = 3600
 
 FILTER_KEYWORDS = ['丝', '制服', '杯', '巨乳', '白富美', '颜值', '清纯']
+MYSQL_RECORD_ENABLE = False
+MYSQL_HOST = ''
+MYSQL_PORT = 1004
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = ''
+MYSQL_DATABASE = 'Porn91'
 
 DOWNLOAD_MAXSIZE = 0
 DOWNLOAD_WARNSIZE = 0
@@ -80,7 +86,8 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'New91Crawler.pipelines.SaveMoviePipeline': 200,
-    'New91Crawler.pipelines.DownloadVideoPipeline': 300
+    'New91Crawler.pipelines.DownloadVideoPipeline': 300,
+    'New91Crawler.pipelines.UpdateMoviePipeline': 400
 }
 FILES_STORE = 'videos'
 # Enable and configure the AutoThrottle extension (disabled by default)

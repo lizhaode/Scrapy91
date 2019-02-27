@@ -19,3 +19,8 @@ class DownloadVideoItem(scrapy.Item):
 class SaveMovieInfoItem(scrapy.Item):
     page_number = scrapy.Field()
     movie_link_and_name = scrapy.Field()
+
+
+class UpdateMovieLinkItem(scrapy.Item):
+    movie_page_url = scrapy.Field()
+    movie_real_url = scrapy.Field()
