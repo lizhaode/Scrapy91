@@ -15,9 +15,9 @@ class MyFollowSpider(scrapy.Spider):
             'Referer': 'http://91porn.com/index.php'
         }
 
-        yield scrapy.Request(url=me_main_url, callback=self.parse_me, headers=login_headers)
+        yield scrapy.Request(url=me_main_url, headers=login_headers)
 
-    def parse_me(self, response: HtmlResponse):
+    def parse(self, response: HtmlResponse):
         # 获取当前页面页数
         url_list = response.url.split('page=')
         if len(url_list) == 1:

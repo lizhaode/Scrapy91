@@ -4,8 +4,8 @@ from scrapy.http.response.html import HtmlResponse
 from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem, UpdateMovieLinkItem
 
 
-class Entrance(scrapy.Spider):
-    name = '91Crawler'
+class MoreThanTenSpider(scrapy.Spider):
+    name = 'More10'
 
     def start_requests(self):
         start_url = 'http://91porn.com/v.php?category=long&viewtype=basic'
