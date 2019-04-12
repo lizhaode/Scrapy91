@@ -2,6 +2,7 @@ import scrapy
 from scrapy.http.response.html import HtmlResponse
 
 from New91Crawler.items import DownloadVideoItem, SaveMovieInfoItem, UpdateMovieLinkItem
+import New91Crawler.lib.ParseRealUrl as ParseRealUrl
 
 
 class MoreThanTenSpider(scrapy.Spider):
@@ -58,7 +59,11 @@ class MoreThanTenSpider(scrapy.Spider):
         if '/' in title:
             title = title.replace('/', '')
 
-        video_link = response.css('source::attr(src)').extract_first()
+        encrypted_url = response.css('video').extract_first().split('strencode("')[1].split('"))')[0]
+        first_encrypted = encrypted_url.split('"')[0]
+        second_excrypted = encrypted_url.split('"')[2]
+        video_link = ParseRealUrl.get_url(first_encrypted, second_excrypted)
+
         if video_link:
             # 处理一下链接中 http://185.38.13.130//mp43/2998... 这种的 url
             video_link_list = video_link.split('//')
