@@ -59,7 +59,7 @@ class MyFollowSpider(scrapy.Spider):
                         'Cookie': self.cookie,
                         'Referer': response.url
                     }
-                    yield scrapy.Request(url=next_link, callback=self.parse_my_follow_real_link, headers=next_headers)
+                    yield scrapy.Request(url=next_link, callback=self.parse, headers=next_headers)
 
     def parse_my_follow_real_link(self, response: HtmlResponse):
         self.logger.warn('开始解析{0}真实视频'.format(response.url))
