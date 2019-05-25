@@ -16,7 +16,7 @@ RETRY_TIMES = 10
 RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
 DOWNLOAD_TIMEOUT = 3600
 
-FILTER_KEYWORDS = ['丝', '制服', '杯', '巨乳', '白富美', '颜值', '清纯']
+FILTER_KEYWORDS = ['丝', '制服', '杯', '巨乳', '白富美', '颜值', '清纯', '情趣', '豹纹', '网']
 MYSQL_RECORD_ENABLE = False
 MYSQL_HOST = ''
 MYSQL_PORT = 1004
